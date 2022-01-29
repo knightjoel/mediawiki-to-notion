@@ -71,10 +71,15 @@ class XmlParser:
             if item[1] == ns_name:
                 return item[0]
 
-        return None
+        raise ValueError('unknown namespace: "{}"'.format(ns_name))
 
     def _ns_name_from_id(self, ns_id):
-        return self._ns.get(ns_id, None)
+        name = self._ns.get(ns_id, None)
+
+        if not name:
+            raise ValueError('unknown namespace id: {}'.format(ns_id))
+
+        return name
 
 
 class PageParser:
