@@ -8,6 +8,19 @@
 
 🚨 The level of effort required to move your wiki content to Notion will largely be driven by how advanced your usage of MediaWiki is. Prepare to spend time massaging wiki content into Markdown format; prepare for multiple iterations of this. This solution provides some tooling to help, but you're the only one who can fully ensure the accuracy of the content processing and import.
 
+## Table of Contents
+
+* [Features](#features)
+* [Solution Architecture](#solution-architecture)
+* [Pre-requisites](#pre-requisites)
+* [Installation](#installation)
+* [Usage](#usage)
+* [Help](#help)
+* [Uninstall](#uninstall)
+* [Limitations & Known Issues](#limitations--known-issues)
+* [Acknowledgements](#acknowledgements)
+* [License](#license)
+
 ## Features
 
 This solution offers the following features:
