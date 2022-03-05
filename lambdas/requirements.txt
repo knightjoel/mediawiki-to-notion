@@ -1,0 +1,2 @@
+md2notion~=2.4.1
+git+https://github.com/jean/notion-py.git@4a2fe68122e53a1cb36bd1698fd8163e654d0fe2#egg=notion

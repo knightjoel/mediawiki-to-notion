@@ -1,0 +1,4 @@
+[flake8]
+# W391 blank line at end of file
+ignore = W391
+max-line-length = 88

@@ -1,0 +1,15 @@
+repos:
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v2.4.0
+      hooks:
+      - id: check-merge-conflict
+      - id: detect-aws-credentials
+    - repo: https://github.com/psf/black
+      rev: 22.1.0
+      hooks:
+      - id: black
+        language_version: python3.8
+    - repo: https://github.com/pycqa/flake8
+      rev: 82b698e09996cdde5d473e234681d8380810d7a2
+      hooks:
+      - id: flake8
