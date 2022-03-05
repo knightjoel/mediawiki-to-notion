@@ -772,7 +772,6 @@ class MwToNotionStack(Stack):
                         color=colors["purple"],
                     ),
                 ],
-                left_y_axis=cloudwatch.YAxisProps(label="Blocks", show_units=False),
             ),
             cloudwatch.GraphWidget(
                 title="NotionUploadLockCleaner",
@@ -830,7 +829,6 @@ class MwToNotionStack(Stack):
                         color=colors["purple"],
                     ),
                 ],
-                left_y_axis=cloudwatch.YAxisProps(label="Blocks", show_units=False),
             ),
         )
 
