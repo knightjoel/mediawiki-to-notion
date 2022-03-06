@@ -38,6 +38,8 @@ This solution offers the following features:
 
 Note this solution uses the non-public Notion API because the public API does not support content import.
 
+![Demo](demo.gif)
+
 ## Solution Architecture
 
 The solution has two phases:
