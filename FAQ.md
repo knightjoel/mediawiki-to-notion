@@ -39,6 +39,8 @@ Pages are processed in serial order to avoid hammering the Notion API with dozen
 
 Increase scale for handling very large wikis by having the Step Function state machine restart itself prior to reaching 25,000 events (which is a [hard limit](https://docs.aws.amazon.com/step-functions/latest/dg/limits-overview.html#service-limits-state-machine-executions) for standard state machines). This would only be relevant for importing > ~500,000 blocks in a single page.
 
+Wikipage metadata such as the timestamp when it was created could be preserved. The non-public Notion API appears to allow setting an arbitrary `created_time` property.
+
 There is almost certainly opportunity for better visibility into error conditions which the pipeline encounters.
 
 ## How do I see what’s going on with the import pipeline?
