@@ -48,3 +48,8 @@ There is almost certainly opportunity for better visibility into error condition
 Use the included CloudWatch dashboard for monitoring the performance of the pipeline. Log into your AWS account, navigate to CloudWatch, click Dashboards, and select `MediaWikiToNotion`.
 
 You can also watch from your Notion app to see new pages being created and blocks being added to the pages.
+
+## Does this solution connect to my wiki?
+
+The solution does not connect to the wiki. Wiki content is exported from the wiki using a MediaWiki-provided PHP script and processed by tooling provided by this solution. That processing can take place on the MediaWiki server or any other server which can meet the software dependency requirements for this solution.
+
