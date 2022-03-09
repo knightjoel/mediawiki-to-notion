@@ -78,14 +78,18 @@ def record_handler(record: SQSRecord) -> None:
 
     for s3e in s3events.records:
         batch_id = str(uuid.uuid4())
+        unquote_key = unquote_plus(s3e.s3.get_object.key)
 
         logger.info(
             "Processing s3://{}/{} as batch {}".format(
-                s3e.s3.bucket.name, unquote_plus(s3e.s3.get_object.key), batch_id
+                s3e.s3.bucket.name, unquote_key, batch_id
             )
         )
 
-        md_filename = unquote_plus(s3e.s3.get_object.key.rsplit("/", 1)[1])
+        if "/" in unquote_key:
+            md_filename = unquote_key.rsplit("/", 1)[1]
+        else:
+            md_filename = unquote_key
         tmpdir = "/tmp/" + batch_id + "/"
         try:
             os.mkdir(tmpdir, mode=0o700)
@@ -97,7 +101,7 @@ def record_handler(record: SQSRecord) -> None:
             logger.debug("Downloading {}".format(tmpdir + md_filename))
             s3_client.download_file(
                 s3e.s3.bucket.name,
-                unquote_plus(s3e.s3.get_object.key),
+                unquote_key,
                 tmpdir + md_filename,
             )
 
@@ -121,7 +125,7 @@ def record_handler(record: SQSRecord) -> None:
                         "BlockBatch": batch_id,
                         "BlockIndex": idx,
                         "S3BucketName": s3e.s3.bucket.name,
-                        "S3ObjectKey": unquote_plus(s3e.s3.get_object.key),
+                        "S3ObjectKey": unquote_key,
                         "BlockContent": pickle.dumps(block),
                     },
                     ConditionExpression=Attr("BlockBatch").not_exists(),
