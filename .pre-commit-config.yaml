@@ -3,6 +3,7 @@ repos:
       rev: v2.4.0
       hooks:
       - id: check-merge-conflict
+      - id: check-json
       - id: detect-aws-credentials
     - repo: https://github.com/psf/black
       rev: 22.1.0
