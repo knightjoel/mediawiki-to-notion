@@ -132,24 +132,24 @@ def record_handler(record: SQSRecord) -> None:
                 )
                 metrics.add_metric(name="BlocksStored", unit=MetricUnit.Count, value=1)
 
+            # Signal that a new batch of blocks is ready. This event will trigger
+            # the upload step function.
+            events.put_events(
+                Entries=[
+                    {
+                        "DetailType": "StoreNotionBlocks",
+                        "Detail": json.dumps(
+                            {"blockBatch": batch_id, "status": ["SUCCESS"]}
+                        ),
+                        "EventBusName": EVENT_BUS_NAME,
+                        "Source": os.getenv("AWS_LAMBDA_FUNCTION_NAME"),
+                    }
+                ]
+            )
+
         finally:
             # Delete Markdown object.
             shutil.rmtree(tmpdir)
-
-        # Signal that a new batch of blocks is ready. This event will trigger
-        # the upload step function.
-        events.put_events(
-            Entries=[
-                {
-                    "DetailType": "StoreNotionBlocks",
-                    "Detail": json.dumps(
-                        {"blockBatch": batch_id, "status": ["SUCCESS"]}
-                    ),
-                    "EventBusName": EVENT_BUS_NAME,
-                    "Source": os.getenv("AWS_LAMBDA_FUNCTION_NAME"),
-                }
-            ]
-        )
 
 
 @metrics.log_metrics
