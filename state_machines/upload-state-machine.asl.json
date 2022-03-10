@@ -203,7 +203,7 @@
           "BlockBatch.$": "$.block_batch.Items[0].BlockBatch.S"
         }
       },
-      "Next": "Query Block Batch",
+      "Next": "Was upload successful?",
       "Catch": [
         {
           "ErrorEquals": [
@@ -214,7 +214,18 @@
         }
       ],
       "Comment": "Does the actual work of uploading the blocks stored in the blocks table to Notion. The Lambda function which underpins this task is expected to be called in a loop, for as long as there are blocks in the table. The function will process a fixed number of blocks and then exit at which point this state will loop back to tasting the blocks table looking for more work to feed into another invocation of the Lambda",
-      "ResultPath": null
+      "ResultPath": "$.UploadResult"
+    },
+    "Was upload successful?": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "Variable": "$.UploadResult.Payload.result",
+            "StringEquals": "SUCCESS",
+            "Next": "Query Block Batch"
+          }
+        ],
+        "Default": "Release Lock"
     },
     "Release Lock": {
       "Type": "Task",

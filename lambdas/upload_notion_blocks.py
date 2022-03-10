@@ -223,7 +223,7 @@ def record_handler(record: Dict) -> bool:
 
 @metrics.log_metrics
 @logger.inject_lambda_context(log_event=True)
-def handler(event: Dict, context: Dict) -> None:
+def handler(event: Dict, context: Dict) -> Dict:
     logger.info("Processing BlockBatch {}".format(event["BlockBatch"]))
 
     max_blocks = int(parameters.get_parameter(MAX_BLOCKS_PARAM))
@@ -248,6 +248,12 @@ def handler(event: Dict, context: Dict) -> None:
                 )
             )
             processed_messages.append(("fail", record))
+            # If there's a failure with even one block, the resulting Notion page
+            # will be incomplete and there is no point in continuing. When
+            # exiting the handler, we will signal that an error occurred so
+            # that the state machine knows not to reinvoke the upload for this
+            # batch.
+            break
         else:
             logger.debug(
                 "Deleting record {}#{} from database".format(
@@ -267,7 +273,7 @@ def handler(event: Dict, context: Dict) -> None:
     fail = sum(r[0] == "fail" for r in processed_messages)
 
     logger.info(
-        "Processed {}/{} blocks successfully".format(success, len(processed_messages))
+        "Processed {}/{} blocks successfully".format(success, len(response["Items"]))
     )
     metrics.add_metric(
         name="SuccessfulBlockUploads", unit=MetricUnit.Count, value=success
@@ -275,3 +281,11 @@ def handler(event: Dict, context: Dict) -> None:
     metrics.add_metric(
         name="UnsuccessfulBlockUploads", unit=MetricUnit.Count, value=fail
     )
+
+    results = {
+        "result": "FAIL" if fail > 0 else "SUCCESS",
+        "success_block_count": success,
+        "fail_block_count": fail,
+    }
+
+    return results
