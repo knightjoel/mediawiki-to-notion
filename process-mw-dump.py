@@ -201,6 +201,8 @@ class WikitextParser(PageParser):
         self._text = re.sub(r"</?nowiki>", "", self._text)
 
         # Delete Table of Contents '__TOC__' marker.
+        self._text = re.sub(r"__TOC__", "", self._text)
+        # I sometimes prefix the TOC with a header.
         self._text = re.sub(r"=+ Table of Contents =+\n__TOC__", "", self._text)
 
         # Put fences around code blocks.
