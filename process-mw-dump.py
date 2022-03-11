@@ -14,6 +14,7 @@
 # www.joelknight.ca
 
 
+import argparse
 import base64
 import os
 import os.path
@@ -381,9 +382,7 @@ def custom_prepare(text, title, namespace):
     return text
 
 
-if __name__ == "__main__":
-    import argparse
-
+def main():
     parser = argparse.ArgumentParser(description="Prepare MediaWiki XML dump")
     parser.add_argument(
         "-outdir", type=str, help="the directory to save wikitext files in"
@@ -393,3 +392,7 @@ if __name__ == "__main__":
 
     xml_parser = XmlParser(args.xmlfile, args.outdir, custom_prepare=custom_prepare)
     xml_parser.parse()
+
+
+if __name__ == "__main__":
+    main()
