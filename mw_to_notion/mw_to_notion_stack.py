@@ -11,6 +11,7 @@
 
 import json
 import subprocess
+import tempfile
 
 from aws_cdk import (
     CfnOutput,
@@ -204,11 +205,28 @@ class MwToNotionStack(Stack):
             ],
         )
 
-        # Lambda functons
-        #################
-        subprocess.check_call(
-            "pip install -r lambdas/requirements.txt -t lambdas --upgrade".split()
-        )
+        # Lambda functons & layers
+        ##########################
+        with tempfile.TemporaryDirectory() as tmpdir:
+            subprocess.check_call(
+                "pip install -r lambdas/notion_layer/requirements.txt -t {}/python".format(  # noqa: E501
+                    tmpdir
+                ).split()
+            )
+
+            notion_layer = lambda_.LayerVersion(
+                self,
+                "NotionLayer",
+                # Need /python at the top of the zip archive.
+                code=lambda_.Code.from_asset(tmpdir),
+                compatible_architectures=[
+                    lambda_.Architecture.ARM_64,
+                    lambda_.Architecture.X86_64,
+                ],
+                compatible_runtimes=[lambda_.Runtime.PYTHON_3_8],
+                description="MediaWiki-to-Notion - layer for Notion modules",
+                removal_policy=RemovalPolicy.DESTROY,
+            )
 
         powertools_layer = lambda_.LayerVersion.from_layer_version_arn(
             self,
@@ -221,7 +239,7 @@ class MwToNotionStack(Stack):
         block_store_function = lambda_.Function(
             self,
             "StoreNotionBlocks",
-            code=lambda_.Code.from_asset("lambdas/"),
+            code=lambda_.Code.from_asset("lambdas/store_notion_blocks"),
             runtime=lambda_.Runtime.PYTHON_3_8,
             handler="store_notion_blocks.handler",
             architecture=lambda_.Architecture.ARM_64,
@@ -236,7 +254,7 @@ class MwToNotionStack(Stack):
             },
             events=[lse.SqsEventSource(queue)],
             function_name="StoreNotionBlocks",
-            layers=[powertools_layer],
+            layers=[notion_layer, powertools_layer],
             timeout=Duration.seconds(self._store_blocks_tmout),
         )
         NagSuppressions.add_resource_suppressions(
@@ -258,7 +276,7 @@ class MwToNotionStack(Stack):
         block_upload_function = lambda_.Function(
             self,
             "UploadNotionBlocks",
-            code=lambda_.Code.from_asset("lambdas/"),
+            code=lambda_.Code.from_asset("lambdas/upload_notion_blocks"),
             runtime=lambda_.Runtime.PYTHON_3_8,
             handler="upload_notion_blocks.handler",
             architecture=lambda_.Architecture.ARM_64,
@@ -275,7 +293,7 @@ class MwToNotionStack(Stack):
                 "POWERTOOLS_SERVICE_NAME": "UploadNotionBlocks",
             },
             function_name="UploadNotionBlocks",
-            layers=[powertools_layer],
+            layers=[notion_layer, powertools_layer],
             timeout=Duration.seconds(self._upload_blocks_tmout),
         )
         NagSuppressions.add_resource_suppressions(
@@ -305,7 +323,7 @@ class MwToNotionStack(Stack):
         page_fails_function = lambda_.Function(
             self,
             "StoreNotionPageFails",
-            code=lambda_.Code.from_asset("lambdas/"),
+            code=lambda_.Code.from_asset("lambdas/store_notion_page_fails"),
             runtime=lambda_.Runtime.PYTHON_3_8,
             handler="store_notion_page_fails.handler",
             architecture=lambda_.Architecture.ARM_64,
