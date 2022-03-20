@@ -113,6 +113,7 @@ def get_or_make_page(batch_id: str, title: str, parent_page_url: str) -> PageBlo
         )
     except Exception:
         logger.exception("Failed to store new page URL in the database")
+        raise
 
     return new_page
 
