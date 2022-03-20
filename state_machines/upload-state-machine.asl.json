@@ -110,7 +110,7 @@
         },
         "Key": {
           "LockName": {
-            "S": "{$LockName}"
+            "S": "${LockName}"
           }
         },
         "ProjectionExpression": "#lockownerid"
