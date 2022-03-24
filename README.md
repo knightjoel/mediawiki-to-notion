@@ -78,7 +78,7 @@ The solution has two phases:
 
 1. Install AWS CDK by following the instructions in the CDK docs. If you already use CDK, skip this step.
     - First, meet the CDK [prerequisites](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_prerequisites).
-    - Next, [install](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_install) the the CDK.
+    - Next, [install](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_install) the CDK.
     - Finally, [bootstrap](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_bootstrap) your AWS account for use with CDK.
 2. [Clone](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) this repository to your computer.
 3. Create and activate a new Python virtual environment using [virtualenv](https://www.tutorialspoint.com/python-virtual-environment) or [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/) or whatever other tooling you prefer.
@@ -124,9 +124,9 @@ The `process-mw-dump.py` script has a mechanism for doing additional preparation
 ```python
 354	    # Transform {{RFC}} template.
 355	    text = re.sub(
-356		r"{{RFC\|([-\w\d]+)(?:\|(.+))?}}",
-357		r"[https://tools.ietf.org/html/\1 RFC \1 \2]",
-358		text,
+356         r"{{RFC\|([-\w\d]+)(?:\|(.+))?}}",
+357         r"[https://tools.ietf.org/html/\1 RFC \1 \2]",
+358         text,
 359	    )
 ```
 
