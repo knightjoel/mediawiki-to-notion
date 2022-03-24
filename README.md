@@ -122,12 +122,12 @@ Review your Markdown files for proper content, formatting, etc. Fix up any issue
 The `process-mw-dump.py` script has a mechanism for doing additional preparation of the wiki page content prior to sending it to pandoc for conversion to Markdown. This mechanism can be used to transform wiki templates into HTML or Markdown. For example, a wiki template such as ``{{RFC|1925|The 12 Networking Truths}`` which inserts a link to the RFC (https://datatracker.ietf.org/doc/html/rfc1925) could be transformed by `process-mw-dump.py` to replace the template text with a Markdown-styled link. In fact, the script does exactly that by default using this regular expression substitution:
 
 ```python
-354	    # Transform {{RFC}} template.
-355	    text = re.sub(
+354    # Transform {{RFC}} template.
+355    text = re.sub(
 356         r"{{RFC\|([-\w\d]+)(?:\|(.+))?}}",
 357         r"[https://tools.ietf.org/html/\1 RFC \1 \2]",
 358         text,
-359	    )
+359    )
 ```
 
 You can add, delete, or modify these transformation rules in `process-mw-dump.py`'s `custom_prepare()` function to suit the templates in use on your wiki. For more information on this, see the [FAQ](FAQ.md).
