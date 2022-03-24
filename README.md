@@ -31,7 +31,7 @@ This solution offers the following features:
 - A (mostly) serverless, cloud-based architecture for pushing Markdown into Notion (see the solution architecture below).
 - Scalability to import one, two, dozens, or hundreds of pages.
 - Importing of content embedded in the MediaWiki pages such as PDFs and images.
-- Importing pages to whichever Notion parent page(s) you'd like.
+- Importing pages to whichever Notion parent page(s) or database(s) you'd like.
 - Flexibility to batch MediaWiki pages however you want: by category, by size, by importance. Repeat a whole batch or a single page as and when you need to.
 - A dashboard for understanding the performance of and any errors encountered by the import pipeline.
 - The import pipeline can import any Markdown content, it doesn't have to be from Mediawiki.
@@ -162,6 +162,7 @@ Create `parenturl.txt` by following these steps:
 5. Repeat these steps as many times as necessary for how you want to organize your content.
 
 Rules of thumb:
+- Copying the link for a Notion database into `parenturl.txt` will cause imported pages to be added as new rows in the database. Copying the link for a Notion page into `parenturl.txt` will cause imported pages to be added as child pages to that parent.
 - All Markdown files in the same directory will be imported to the same parent page (per `parenturl.txt`) but multiple directories can import to the same parent page (by having the same `parenturl.txt` in multiple directories).
 - You must have a `parenturl.txt` file in every directory which contains Markdown files; `parenturl.txt` files higher up the directory tree are not used for files lower in the tree.
 - Directory names are ignored by the import pipeline; only the file name and `parenturl.txt` content matter. Use directories as your own aid for organizing the files.

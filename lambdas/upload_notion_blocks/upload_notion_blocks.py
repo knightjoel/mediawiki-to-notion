@@ -40,7 +40,7 @@ from aws_lambda_powertools.metrics.base import MAX_METRICS
 from aws_lambda_powertools.utilities import parameters
 from boto3.dynamodb.conditions import Attr, Key
 from md2notion.upload import uploadBlock
-from notion.block import PageBlock
+from notion.block import CollectionViewBlock, CollectionViewPageBlock, PageBlock
 from notion.client import NotionClient
 from requests.packages.urllib3.util.retry import Retry
 
@@ -101,7 +101,18 @@ def get_or_make_page(batch_id: str, title: str, parent_page_url: str) -> PageBlo
 
     logger.info("Creating new page '{}' under '{}'".format(title, parent_page.title))
     try:
-        new_page = parent_page.children.add_new(PageBlock, title=title)
+        logger.debug("Parent page is a {}".format(type(parent_page)))
+        if type(parent_page) in (CollectionViewBlock, CollectionViewPageBlock):
+            new_page = parent_page.collection.add_row()
+            new_page.title = title
+        elif type(parent_page) is PageBlock:
+            new_page = parent_page.children.add_new(PageBlock, title=title)
+        else:
+            raise ValueError(
+                "The block at {} doesn't appear to be a page or a database: {}".format(
+                    parent_page_url, type(parent_page)
+                )
+            )
     except Exception:
         logger.exception("Couldn't create new page '{}'".format(title))
         raise
