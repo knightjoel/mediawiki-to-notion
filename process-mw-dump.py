@@ -300,7 +300,7 @@ def custom_prepare(text, title, namespace):
 
     # Transoform {{Book}} template.
     text = re.sub(
-        r"{{Book\|(.+)\|(\d+)}}", r"(source: ''/1''/ISBN /2)", text, flags=re.IGNORECASE
+        r"{{Book\|(.+)\|(\d+)}}", r"(source: \1/ISBN \2)", text, flags=re.IGNORECASE
     )
 
     # Transform {{Ciscobug}} template.
