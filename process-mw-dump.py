@@ -206,6 +206,10 @@ class WikitextParser(PageParser):
         self._text = re.sub(r"=+ Table of Contents =+\n__TOC__", "", self._text)
         self._text = re.sub(r"__TOC__", "", self._text)
 
+        # Strip size and alignment options on [[File]] tags. Their presence causes
+        # Pandoc to output <figure> tags which show up literally in Notion.
+        self._text = re.sub(r"\[\[File:([^\|]+)\|.+\]\]", r"[[File:\1]]", self._text)
+
         # Put fences around code blocks.
         newtext = []
         in_code = False
