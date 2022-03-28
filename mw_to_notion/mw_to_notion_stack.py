@@ -42,7 +42,7 @@ class MwToNotionStack(Stack):
         super().__init__(scope, construct_id, **kwargs)
 
         self._powertools_layer_version = 11
-        self._max_blocks_default = 200
+        self._max_blocks_default = 50
         self._metric_namespace = "MediaWikiToNotionApp"
         self._store_blocks_tmout = 300
         self._store_page_fails_tmout = 300
