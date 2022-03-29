@@ -56,6 +56,8 @@ MAX_BLOCKS_PARAM = os.getenv("MAX_BLOCKS_PARAM")
 NOTION_BLOCKS_TABLE = os.getenv("NOTION_BLOCKS_TABLE")
 NOTION_PAGES_TABLE = os.getenv("NOTION_PAGES_TABLE")
 
+PARENT_URL_FILENAME = "parenturl.txt"
+
 
 class Metrics(PTMetrics):
     def add_metric(self, name: str, unit: Union[MetricUnit, str], value: float) -> None:
@@ -160,15 +162,8 @@ def init_notion_client() -> None:
     )
 
 
-def record_handler(record: Dict) -> bool:
+def record_handler(record: Dict, tmpdir: str) -> bool:
     logger.debug("Processing {}#{}".format(record["BlockBatch"], record["BlockIndex"]))
-
-    # Storage for images, PDFs, etc, which are embedded in the block.
-    tmpdir = "/tmp/" + record["BlockBatch"] + "/"
-    try:
-        os.mkdir(tmpdir, mode=0o700)
-    except FileExistsError:
-        pass
 
     # Custom file getter function which will retrieve embedded files from
     # the content staging bucket.
@@ -196,10 +191,14 @@ def record_handler(record: Dict) -> bool:
     # Download parenturl.txt and pull the URL of the page which is actually
     # the grandparent of this block and the parent of this block's parent
     # page.
-    parent_page_filename = record["S3ObjectKey"].rsplit("/", 1)[0] + "/parenturl.txt"
-    logger.debug("Downloading {}".format(parent_page_filename))
-    r = s3_client.get_object(Bucket=record["S3BucketName"], Key=parent_page_filename)
-    parent_page_url = r["Body"].read().decode("utf-8").strip()
+    if not os.path.isfile(tmpdir + PARENT_URL_FILENAME):
+        filename = record["S3ObjectKey"].rsplit("/", 1)[0] + "/" + PARENT_URL_FILENAME
+        logger.debug("Downloading {}".format(filename))
+        s3_client.download_file(
+            record["S3BucketName"], filename, tmpdir + PARENT_URL_FILENAME
+        )
+    with open(tmpdir + PARENT_URL_FILENAME, "r") as f:
+        parent_page_url = f.readline()
     logger.debug("Parent page url: {}".format(parent_page_url))
 
     # Prepare to talk to the Notion API.
@@ -225,10 +224,6 @@ def record_handler(record: Dict) -> bool:
             )
         )
         raise
-    finally:
-        # Clean up any embedded files which were downloaded to avoid unbounded
-        # use of the limited disk space Lambda functions have.
-        shutil.rmtree(tmpdir)
 
     return True
 
@@ -249,10 +244,20 @@ def handler(event: Dict, context: Dict) -> Dict:
         "Retrieved {} record(s) for this batch of blocks".format(response["Count"])
     )
 
+    # Storage for images, PDFs, etc, which are embedded in the block.
+    tmpdir = "/tmp/" + event["BlockBatch"] + "/"
+    try:
+        os.mkdir(tmpdir, mode=0o700)
+    except FileExistsError:
+        pass
+    except Exception:
+        logger.exception("Unable to create temporary directory")
+        raise
+
     processed_messages = []
     for record in response["Items"]:
         try:
-            r = record_handler(record)
+            r = record_handler(record, tmpdir)
         except Exception:
             logger.exception(
                 "Caught an exception for record {}#{}".format(
@@ -293,6 +298,10 @@ def handler(event: Dict, context: Dict) -> Dict:
     metrics.add_metric(
         name="UnsuccessfulBlockUploads", unit=MetricUnit.Count, value=fail
     )
+
+    # Clean up any embedded files which were downloaded to avoid unbounded
+    # use of the limited disk space this Lambda function has.
+    shutil.rmtree(tmpdir)
 
     results = {
         "result": "FAIL" if fail > 0 else "SUCCESS",
