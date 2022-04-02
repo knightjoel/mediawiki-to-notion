@@ -198,7 +198,7 @@ def record_handler(record: Dict, tmpdir: str) -> bool:
             record["S3BucketName"], filename, tmpdir + PARENT_URL_FILENAME
         )
     with open(tmpdir + PARENT_URL_FILENAME, "r") as f:
-        parent_page_url = f.readline()
+        parent_page_url = f.readline().rstrip()
     logger.debug("Parent page url: {}".format(parent_page_url))
 
     # Prepare to talk to the Notion API.
