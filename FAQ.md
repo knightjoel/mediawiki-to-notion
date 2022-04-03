@@ -51,5 +51,5 @@ You can also watch from your Notion app to see new pages being created and block
 
 ## Does this solution connect to my wiki?
 
-The solution does not connect to the wiki. Wiki content is exported from the wiki using a MediaWiki-provided PHP script and processed by tooling provided by this solution. That processing can take place on the MediaWiki server or any other server which can meet the software dependency requirements for this solution.
+The solution does not connect to the wiki. Wiki content is exported from the wiki using a MediaWiki PHP script to export wiki content into an XML file. The XML file is processed by this solution either on the MediaWiki server or on any server which can meet the dependencies for this solution.
 
