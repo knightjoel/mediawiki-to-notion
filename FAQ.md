@@ -2,7 +2,7 @@
 
 ## Does this solution connect to my wiki?
 
-The solution does not connect to the wiki. Wiki content is exported from the wiki using a MediaWiki PHP script to export wiki content into an XML file. The XML file is processed by this solution either on the MediaWiki server or on any server which can meet the dependencies for this solution.
+The solution does not connect to the wiki. Wiki content is exported as XML using a script included in MediaWiki. The XML file can be ingested directly from the MediaWiki server or transferred off the server and ingested elsewhere.
 
 ## What will my AWS costs be to run this solution?
 
@@ -23,7 +23,7 @@ Pages enter `FAIL` state when something went wrong with their upload to Notion. 
 
 ## I see `Unable to download file 'somefile.jpg'` in the UploadNotionBlocks logs. What does this mean?
 
-The solution downloads media files such as JPGs, PDFs, or others from the `File` directory in the Amazon S3 bucket. These files come from the wiki pages as embedded media. These media files need to be retrieved from the bucket before they can be imported into Notion with their associated page. The error means that the solution could not download the file from the bucket.
+The solution downloads media files such as JPGs, PDFs, or others from the `File` directory in the Amazon S3 bucket. These files come from the wiki pages as embedded media and are exported in the XML dump alongside the rest of the wiki content. These media files need to be retrieved from the bucket before they can be imported into Notion with their associated page. The error means that the solution could not download the file from the bucket.
 
 Verify the capitalization of the filename in the Markdown file matches the capitalization of the file in the bucket. Amazon S3 is case sensitive so the case in the Markdown must match the filename in the bucket. Once you’ve corrected the filename in the Markdown, upload the Markdown file to the bucket again to trigger a new upload attempt.
 
@@ -47,7 +47,7 @@ You can optionally subclass either the `PageParser` or `WikitextParser` classes 
 
 ## How do I add support for processing my custom wiki templates?
 
-MediaWiki’s wikitext supports inline templates which allow for inserting bits of text or markup by  writing a short template tag. For example, a template which looks like `{{RFC|1925|The 12 Networking Truths}}` could be used to insert a hyperlink to the RFC document such as `<a href="https://datatracker.ietf.org/doc/html/rfc1925">The 12 Networking Truths</a>`. Pandoc, which does the wikitext→Markdown conversion for this solution does not expand wiki templates. The resulting Markdown document will contain the literal template text (`{RFC|1925|The 12 Networking Truths}}`) instead of the desired hyperlink.
+MediaWiki’s wikitext supports inline templates which allow for inserting bits of text or markup by  writing a short template tag. For example, a template which looks like `{{RFC|1925|The 12 Networking Truths}}` could be used to insert a hyperlink to the RFC document such as `<a href="https://datatracker.ietf.org/doc/html/rfc1925">The 12 Networking Truths</a>`. Pandoc, which does the wikitext→Markdown conversion for this solution does not expand wiki templates. The resulting Markdown document will contain the literal template text (`{{RFC|1925|The 12 Networking Truths}}`) instead of the desired hyperlink.
 
 The `process-mw-dump.py` script has a mechanism in it to handle your wiki templates. You can add, delete, or modify the template transformation rules in `process-mw-dump.py`'s `custom_prepare()` function to suit the templates in use on your wiki. The function contains a number of examples taken from a real wiki.
 
