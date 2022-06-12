@@ -19,6 +19,8 @@ import pickle
 import shutil
 import uuid
 from collections import defaultdict
+from datetime import datetime as dt, timezone
+from decimal import Decimal
 from typing import Any, Dict, Union
 from urllib.parse import unquote_plus
 
@@ -46,6 +48,7 @@ s3_client = boto3.client("s3")
 
 EVENT_BUS_NAME = os.getenv("EVENT_BUS_NAME")
 NOTION_BLOCKS_TABLE = os.getenv("NOTION_BLOCKS_TABLE")
+NOTION_PAGES_TABLE = os.getenv("NOTION_PAGES_TABLE")
 
 
 class Metrics(PTMetrics):
@@ -75,6 +78,9 @@ def record_handler(record: SQSRecord) -> None:
 
     if s3events.get("Event") == "s3:TestEvent":
         return
+
+    blocks_table = dynamodb.Table(NOTION_BLOCKS_TABLE)
+    pages_table = dynamodb.Table(NOTION_PAGES_TABLE)
 
     for s3e in s3events.records:
         batch_id = str(uuid.uuid4())
@@ -109,7 +115,6 @@ def record_handler(record: SQSRecord) -> None:
             with open(tmpdir + md_filename, "r", encoding="utf-8") as md_file:
                 rendered = convert(md_file)
 
-            table = dynamodb.Table(NOTION_BLOCKS_TABLE)
             logger.debug("Converting {} to Notion blocks".format(tmpdir + md_filename))
             for idx, block in enumerate(rendered):
                 # In certain cases, pandoc inserts HTML comments into the Markdown
@@ -120,7 +125,7 @@ def record_handler(record: SQSRecord) -> None:
                 # ref: https://pandoc.org/MANUAL.html#ending-a-list
                 if block.get("type") is TextBlock and block.get("title") == "<!-- -->":
                     continue
-                table.put_item(
+                blocks_table.put_item(
                     Item={
                         "BlockBatch": batch_id,
                         "BlockIndex": idx,
@@ -131,6 +136,18 @@ def record_handler(record: SQSRecord) -> None:
                     ConditionExpression=Attr("BlockBatch").not_exists(),
                 )
                 metrics.add_metric(name="BlocksStored", unit=MetricUnit.Count, value=1)
+
+            pages_table.put_item(
+                Item={
+                    "BlockBatch": batch_id,
+                    "S3ObjectKey": unquote_key,
+                    "Status": "NEW",
+                    "StatusTime": Decimal(
+                        int(dt.timestamp(dt.now(timezone.utc))) * 1000
+                    ),
+                },
+                ConditionExpression=Attr("BlockBatch").not_exists(),
+            )
 
             # Signal that a new batch of blocks is ready. This event will trigger
             # the upload step function.

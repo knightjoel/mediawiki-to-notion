@@ -44,6 +44,7 @@ class MwToNotionStack(Stack):
         self._powertools_layer_version = 11
         self._max_blocks_default = 50
         self._metric_namespace = "MediaWikiToNotionApp"
+        self._page_status_widget_tmout = 30
         self._store_blocks_tmout = 300
         self._store_page_fails_tmout = 300
         self._upload_blocks_tmout = 600
@@ -247,6 +248,7 @@ class MwToNotionStack(Stack):
             environment={
                 "NOTION_BLOCKS_TABLE": notion_blocks_table.table_name,
                 "NOTION_DATA_DIR": "/tmp/notion-py",
+                "NOTION_PAGES_TABLE": notion_pages_table.table_name,
                 "POWERTOOLS_METRICS_NAMESPACE": self._metric_namespace,
                 # Service name must match function name: the dashboard infers
                 # the service name from the function name.
@@ -272,6 +274,9 @@ class MwToNotionStack(Stack):
         notion_blocks_table.grant(
             block_store_function.grant_principal, "dynamodb:PutItem"
         )
+        notion_pages_table.grant(
+            block_store_function.grant_principal, "dynamodb:PutItem"
+        )
 
         block_upload_function = lambda_.Function(
             self,
@@ -285,8 +290,8 @@ class MwToNotionStack(Stack):
                 "MAX_BLOCKS_PARAM": max_blocks_param.parameter_name,
                 "API_SECRET_NAME": api_secret.secret_name,
                 "NOTION_BLOCKS_TABLE": notion_blocks_table.table_name,
-                "NOTION_PAGES_TABLE": notion_pages_table.table_name,
                 "NOTION_DATA_DIR": "/tmp/notion-py",
+                "NOTION_PAGES_TABLE": notion_pages_table.table_name,
                 "POWERTOOLS_METRICS_NAMESPACE": self._metric_namespace,
                 # Service name must match function name: the dashboard infers
                 # the service name from the function name.
@@ -317,7 +322,37 @@ class MwToNotionStack(Stack):
         notion_pages_table.grant(
             block_upload_function.grant_principal,
             "dynamodb:GetItem",
-            "dynamodb:PutItem",
+            "dynamodb:UpdateItem",
+        )
+
+        page_status_widget_function = lambda_.Function(
+            self,
+            "PageStatusWidget",
+            code=lambda_.Code.from_asset("lambdas/notion_pages_custom_widget"),
+            runtime=lambda_.Runtime.PYTHON_3_8,
+            handler="notion_pages_custom_widget.handler",
+            architecture=lambda_.Architecture.ARM_64,
+            description="MediaWiki-to-Notion - backend for a custom dashboard widget",
+            environment={
+                "NOTION_PAGES_TABLE": notion_pages_table.table_name,
+            },
+            function_name="NotionPagesCustomWidget",
+            layers=[powertools_layer],
+            timeout=Duration.seconds(self._page_status_widget_tmout),
+        )
+        NagSuppressions.add_resource_suppressions(
+            page_status_widget_function,
+            [
+                {
+                    "id": "AwsSolutions-IAM4",
+                    "reason": "Uses policy/service-role/AWSLambdaBasicExecutionRole",
+                },
+            ],
+            True,
+        )
+        notion_pages_table.grant(
+            page_status_widget_function.grant_principal,
+            "dynamodb:Scan",
         )
 
         page_fails_function = lambda_.Function(
@@ -370,6 +405,13 @@ class MwToNotionStack(Stack):
             self,
             "BlockUploadFunctionLogGroup",
             log_group_name="/aws/lambda/" + block_upload_function.function_name,
+            removal_policy=RemovalPolicy.DESTROY,
+            retention=logs.RetentionDays.INFINITE,
+        )
+        logs.LogGroup(
+            self,
+            "PageStatusWidgetFunctionLogGroup",
+            log_group_name="/aws/lambda/" + page_status_widget_function.function_name,
             removal_policy=RemovalPolicy.DESTROY,
             retention=logs.RetentionDays.INFINITE,
         )
@@ -528,6 +570,7 @@ class MwToNotionStack(Stack):
                 "ConcurrentAccessLimit": "1",
                 "LockName": "Semaphore",
                 "TableBlocks": notion_blocks_table.table_name,
+                "TablePages": notion_pages_table.table_name,
                 "TableSemaphore": semaphore_table.table_name,
                 "UploadFunction": block_upload_function.function_name,
             },
@@ -546,7 +589,28 @@ class MwToNotionStack(Stack):
         )
 
         block_upload_function.grant_invoke(upload_state_machine_role.grant_principal)
-        notion_blocks_table.grant_read_data(upload_state_machine_role.grant_principal)
+        NagSuppressions.add_resource_suppressions(
+            upload_state_machine_role,
+            [
+                {
+                    "id": "AwsSolutions-IAM5",
+                    "reason": (
+                        "Granted invoke permissions to all versions of the",
+                        " UploadNotionBlocks function",
+                    ),
+                    "applies_to": "Resource::<UploadNotionBlocksE42B387B.Arn>:*",
+                },
+            ],
+            True,
+        )
+        notion_blocks_table.grant(
+            upload_state_machine_role.grant_principal,
+            "dynamodb:Query",
+        )
+        notion_pages_table.grant(
+            upload_state_machine_role.grant_principal,
+            "dynamodb:UpdateItem",
+        )
         semaphore_table.grant(
             upload_state_machine_role.grant_principal,
             "dynamodb:GetItem",
@@ -641,6 +705,8 @@ class MwToNotionStack(Stack):
         graph_widget_width = 12
         heading_widget_height = 1
         heading_widget_width = 24
+        notion_pages_widget_height = 6
+        notion_pages_widget_width = 18
         sv_widget_height = 3
         sv_widget_width = 4
 
@@ -721,6 +787,19 @@ class MwToNotionStack(Stack):
                     )
                 ],
             ),
+        )
+
+        # Notion pages log
+        dashboard.add_widgets(
+            cloudwatch.CustomWidget(
+                function_arn=page_status_widget_function.function_arn,
+                title="",
+                height=notion_pages_widget_height,
+                width=notion_pages_widget_width,
+                update_on_refresh=True,
+                update_on_resize=False,
+                update_on_time_range_change=True,
+            )
         )
 
         # State machines header

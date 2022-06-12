@@ -30,6 +30,7 @@ import os
 import pickle
 import shutil
 from collections import defaultdict
+from datetime import datetime as dt, timezone
 from pathlib import Path
 from typing import Dict, Union
 
@@ -88,7 +89,13 @@ def get_or_make_page(batch_id: str, title: str, parent_page_url: str) -> PageBlo
     response = table.get_item(Key={"BlockBatch": batch_id})
 
     page = response.get("Item")
-    if page:
+    if page is None:
+        raise ValueError(
+            "There is no record in the {} table for batch id {}".format(
+                NOTION_PAGES_TABLE, batch_id
+            )
+        )
+    if page.get("PageUrl") is not None:
         logger.debug("Page found at {}".format(page["PageUrl"]))
         return notion_client.get_block(page["PageUrl"])
 
@@ -120,8 +127,24 @@ def get_or_make_page(batch_id: str, title: str, parent_page_url: str) -> PageBlo
         raise
 
     try:
-        response = table.put_item(
-            Item={"BlockBatch": batch_id, "PageUrl": new_page.get_browseable_url()},
+        response = table.update_item(
+            Key={"BlockBatch": batch_id},
+            ExpressionAttributeNames={
+                "#status": "Status",
+                "#status_time": "StatusTime",
+            },
+            ExpressionAttributeValues={
+                ":page_url": new_page.get_browseable_url(),
+                ":status_val": "UPLOADING",
+                ":status_time": int(dt.timestamp(dt.now(timezone.utc)) * 1000),
+            },
+            UpdateExpression=",".join(
+                [
+                    "SET PageUrl = :page_url",
+                    "#status = :status_val",
+                    "#status_time = :status_time",
+                ]
+            ),
             ConditionExpression=Attr("PageUrl").not_exists(),
         )
     except Exception:
@@ -305,6 +328,7 @@ def handler(event: Dict, context: Dict) -> Dict:
 
     results = {
         "result": "FAIL" if fail > 0 else "SUCCESS",
+        "result_time": int(dt.timestamp(dt.now(timezone.utc)) * 1000),
         "success_block_count": success,
         "fail_block_count": fail,
     }

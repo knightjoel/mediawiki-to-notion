@@ -190,10 +190,6 @@
       ],
       "Default": "UploadNotionBlocks"
     },
-    "Fail": {
-      "Type": "Fail",
-      "Comment": "This state is reached if the upload task throws an error. It's expected that the 'cleanup' state machine will clean the dangling lock which is left when this state is reached."
-    },
     "UploadNotionBlocks": {
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
@@ -210,11 +206,34 @@
             "States.TaskFailed"
           ],
           "Comment": "Lambda function failure.",
-          "Next": "Fail"
+          "Next": "Set Notion page status aborted"
         }
       ],
       "Comment": "Does the actual work of uploading the blocks stored in the blocks table to Notion. The Lambda function which underpins this task is expected to be called in a loop, for as long as there are blocks in the table. The function will process a fixed number of blocks and then exit at which point this state will loop back to tasting the blocks table looking for more work to feed into another invocation of the Lambda",
       "ResultPath": "$.UploadResult"
+    },
+    "Set Notion page status aborted": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:updateItem",
+      "Parameters": {
+        "TableName": "${TablePages}",
+        "Key": {
+          "BlockBatch": {
+            "S.$": "$.detail.blockBatch"
+          }
+        },
+        "ExpressionAttributeNames": {
+          "#status": "Status"
+        },
+        "ExpressionAttributeValues": {
+          ":status_val": {
+            "S": "ABORTED"
+          }
+        },
+        "UpdateExpression": "SET #status = :status_val",
+        "ReturnValues": "UPDATED_NEW"
+      },
+      "Next": "Release Lock"
     },
     "Was upload successful?": {
         "Type": "Choice",
@@ -270,11 +289,49 @@
           "ErrorEquals": [
             "DynamoDB.ConditionalCheckFailedException"
           ],
-          "Next": "Success State",
+          "Next": "Were blocks uploaded?",
           "ResultPath": "$.error"
         }
       ],
       "ResultPath": null,
+      "Next": "Were blocks uploaded?"
+    },
+    "Were blocks uploaded?": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.UploadResult.Payload",
+          "IsPresent": true,
+          "Next": "Set Notion page status"
+        }
+      ],
+      "Default": "Success State",
+      "Comment": "This choice checks to see if any blocks were uploaded by the UploadNotionBlocks task/function. We test this by looking for the output from that task in our input. if it's present, we know the upload task ran and we can insepct that output to determine the results of the upload in a further task."
+    },
+    "Set Notion page status": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:updateItem",
+      "Parameters": {
+        "TableName": "${TablePages}",
+        "Key": {
+          "BlockBatch": {
+            "S.$": "$.detail.blockBatch"
+          }
+        },
+        "ExpressionAttributeNames": {
+          "#status": "Status"
+        },
+        "ExpressionAttributeValues": {
+          ":status_val": {
+            "S.$": "$.UploadResult.Payload.result"
+          },
+          ":status_time": {
+            "N.$": "States.Format($.UploadResult.Payload.result_time)"
+          }
+        },
+        "UpdateExpression": "SET #status = :status_val, StatusTime = :status_time",
+        "ReturnValues": "UPDATED_NEW"
+      },
       "Next": "Success State"
     },
     "Success State": {
