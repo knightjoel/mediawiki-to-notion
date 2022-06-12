@@ -201,6 +201,14 @@ In your checked-out copy of this repo, run `cdk destroy`.
 
 While Notion supports applying bold/italic inside code blocks, it does not appear to recognize such markings during Markdown import. Bold and italic text inside code blocks will be surrounded by literal `**` and `*`, respectively.
 
+**Extra rows when converting inline tables to simple tables**
+
+Imported pages which contain wiki tables will be converted to inline Notion tables. If such a table is then converted to a Notion "simple table" using the app, the simple table will have two empty rows added to it. These rows cannot be deleted. Looking at the browser's developer tools, it hints that somehow the inline tables are created in a way which violates Notion's data model and when converting to a simple table, causes an exception.
+
+**Extra blank line in code blocks**
+
+Code blocks rendered on the Notion page always end up with an extra blank line at the bottom. I've been unable to find the root cause of this.
+
 **Embedded content from MediaWiki such as PDFs and text files will be uploaded to Notion as images**
 
 When viewing the imported page in the Notion app, the embedded content will show a large block saying `The image could not be loaded`. This must be manually cleaned up by hovering your mouse over the block and clicking `Original`. Use your browser to save the original to a local drive. In the Notion app, create a new `/embed` block and upload the content from your local drive. Finally, delete the block that says the image could not be loaded.
