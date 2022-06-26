@@ -119,7 +119,7 @@ Pay attention to any `WARNING` or `ERROR` messages in the `process-mw-dump.py` o
 
 Review your Markdown files for proper content, formatting, etc. Fix up any issues by either 1/ editing the Markdown directly, 2/ editing the wiki page and re-doing the dump and processing, or 3/ modifying `process-mw-dump.py` so it pre-processes the wiki text prior to having pandoc convert it to Markdown.
 
-The `process-mw-dump.py` script has a mechanism for doing additional preparation of the wiki page content prior to sending it to pandoc for conversion to Markdown. This mechanism can be used to transform wiki templates into HTML or Markdown. For example, a wiki template such as ``{{RFC|1925|The 12 Networking Truths}`` which inserts a link to the RFC (https://datatracker.ietf.org/doc/html/rfc1925) could be transformed by `process-mw-dump.py` to replace the template text with a Markdown-styled link. In fact, the script does exactly that by default using this regular expression substitution:
+The `process-mw-dump.py` script has a mechanism for doing additional preparation of the wiki page content prior to sending it to pandoc for conversion to Markdown. This mechanism can be used to transform wiki templates into HTML or Markdown. For example, a wiki template such as ``{{RFC|1925|The 12 Networking Truths}}`` which inserts a link to the RFC (https://datatracker.ietf.org/doc/html/rfc1925) could be transformed by `process-mw-dump.py` to replace the template text with a Markdown-styled link. In fact, the script does exactly that by default using this regular expression substitution:
 
 ```python
 354    # Transform {{RFC}} template.
