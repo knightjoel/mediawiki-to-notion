@@ -625,8 +625,8 @@ class MwToNotionStack(Stack):
             self,
             "MwToNotionEventsRole",
             assumed_by=iam.ServicePrincipal("events.amazonaws.com"),
-            inline_policies=[
-                iam.PolicyDocument(
+            inline_policies={
+                "StartStateMachines": iam.PolicyDocument(
                     statements=[
                         iam.PolicyStatement(
                             actions=["states:StartExecution"],
@@ -638,7 +638,7 @@ class MwToNotionStack(Stack):
                         )
                     ]
                 )
-            ],
+            },
         )
 
         cleanup_state_rule = events.CfnRule(
