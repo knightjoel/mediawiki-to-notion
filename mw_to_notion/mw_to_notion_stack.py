@@ -269,6 +269,16 @@ class MwToNotionStack(Stack):
             ],
             True,
         )
+        NagSuppressions.add_resource_suppressions(
+            block_store_function,
+            [
+                {
+                    # FIXME
+                    "id": "AwsSolutions-L1",  # latest runtime check
+                    "reason": "Notion layer not tested with Python > 3.8",
+                }
+            ],
+        )
 
         queue.grant_consume_messages(block_store_function.grant_principal)
         notion_blocks_table.grant(
@@ -311,6 +321,16 @@ class MwToNotionStack(Stack):
             ],
             True,
         )
+        NagSuppressions.add_resource_suppressions(
+            block_upload_function,
+            [
+                {
+                    # FIXME
+                    "id": "AwsSolutions-L1",  # latest runtime check
+                    "reason": "Notion layer not tested with Python > 3.8",
+                }
+            ],
+        )
 
         api_secret.grant_read(block_upload_function.grant_principal)
         max_blocks_param.grant_read(block_upload_function.grant_principal)
@@ -329,7 +349,7 @@ class MwToNotionStack(Stack):
             self,
             "PageStatusWidget",
             code=lambda_.Code.from_asset("lambdas/notion_pages_custom_widget"),
-            runtime=lambda_.Runtime.PYTHON_3_8,
+            runtime=lambda_.Runtime.PYTHON_3_9,
             handler="notion_pages_custom_widget.handler",
             architecture=lambda_.Architecture.ARM_64,
             description="MediaWiki-to-Notion - backend for a custom dashboard widget",
@@ -359,7 +379,7 @@ class MwToNotionStack(Stack):
             self,
             "StoreNotionPageFails",
             code=lambda_.Code.from_asset("lambdas/store_notion_page_fails"),
-            runtime=lambda_.Runtime.PYTHON_3_8,
+            runtime=lambda_.Runtime.PYTHON_3_9,
             handler="store_notion_page_fails.handler",
             architecture=lambda_.Architecture.ARM_64,
             description=(
