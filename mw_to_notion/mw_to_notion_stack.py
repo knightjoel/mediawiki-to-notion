@@ -595,8 +595,8 @@ class MwToNotionStack(Stack):
                 {
                     "id": "AwsSolutions-IAM5",
                     "reason": (
-                        "Granted invoke permissions to all versions of the",
-                        " UploadNotionBlocks function",
+                        "Granted invoke permissions to all versions of the"
+                        " UploadNotionBlocks function"
                     ),
                     "applies_to": "Resource::<UploadNotionBlocksE42B387B.Arn>:*",
                 },
