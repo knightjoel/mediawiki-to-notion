@@ -6,11 +6,11 @@ repos:
       - id: check-json
       - id: detect-aws-credentials
     - repo: https://github.com/psf/black
-      rev: 22.1.0
+      rev: 22.10.0
       hooks:
       - id: black
-        language_version: python3.8
+        language_version: python3.9
     - repo: https://github.com/pycqa/flake8
-      rev: 82b698e09996cdde5d473e234681d8380810d7a2
+      rev: 5.0.4
       hooks:
       - id: flake8
