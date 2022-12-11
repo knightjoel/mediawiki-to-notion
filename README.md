@@ -68,7 +68,7 @@ The solution has two phases:
 ## Pre-requisites
 
 - A computer (cloud, on-prem, in your basement, doesn't matter) with the following software installed:
-    - Python 3.8+
+    - Python 3.9+
     - Node.js 10.13.0 or newer
     - The AWS Cloud Development Kit (CDK)
 - Ability to access a shell on the computer where MediaWiki is running.

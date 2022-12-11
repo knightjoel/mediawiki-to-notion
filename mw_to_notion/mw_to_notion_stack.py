@@ -227,7 +227,7 @@ class MwToNotionStack(Stack):
                     lambda_.Architecture.ARM_64,
                     lambda_.Architecture.X86_64,
                 ],
-                compatible_runtimes=[lambda_.Runtime.PYTHON_3_8],
+                compatible_runtimes=[lambda_.Runtime.PYTHON_3_9],
                 description="MediaWiki-to-Notion - layer for Notion modules",
                 removal_policy=RemovalPolicy.DESTROY,
             )
@@ -244,7 +244,7 @@ class MwToNotionStack(Stack):
             self,
             "StoreNotionBlocks",
             code=lambda_.Code.from_asset("lambdas/store_notion_blocks"),
-            runtime=lambda_.Runtime.PYTHON_3_8,
+            runtime=lambda_.Runtime.PYTHON_3_9,
             handler="store_notion_blocks.handler",
             architecture=lambda_.Architecture.ARM_64,
             description="MediaWiki-to-Notion - render and store Notion blocks",
@@ -278,7 +278,7 @@ class MwToNotionStack(Stack):
                 {
                     # FIXME
                     "id": "AwsSolutions-L1",  # latest runtime check
-                    "reason": "Notion layer not tested with Python > 3.8",
+                    "reason": "Notion layer not tested with Python > 3.9",
                 }
             ],
         )
@@ -295,7 +295,7 @@ class MwToNotionStack(Stack):
             self,
             "UploadNotionBlocks",
             code=lambda_.Code.from_asset("lambdas/upload_notion_blocks"),
-            runtime=lambda_.Runtime.PYTHON_3_8,
+            runtime=lambda_.Runtime.PYTHON_3_9,
             handler="upload_notion_blocks.handler",
             architecture=lambda_.Architecture.ARM_64,
             description="MediaWiki-to-Notion - upload blocks to Notion",
@@ -330,7 +330,7 @@ class MwToNotionStack(Stack):
                 {
                     # FIXME
                     "id": "AwsSolutions-L1",  # latest runtime check
-                    "reason": "Notion layer not tested with Python > 3.8",
+                    "reason": "Notion layer not tested with Python > 3.9",
                 }
             ],
         )
