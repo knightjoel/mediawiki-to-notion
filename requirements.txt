@@ -1,4 +1,5 @@
 aws-cdk-lib==2.31.0
 cdk-nag~=2.17.1
 constructs>=10.0.0,<11.0.0
+defusedxml
 pandoc~=2.1
