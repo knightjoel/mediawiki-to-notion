@@ -10,7 +10,7 @@
 
 
 import json
-import subprocess
+import subprocess  # nosec B404
 import tempfile
 
 from aws_cdk import (
@@ -209,10 +209,13 @@ class MwToNotionStack(Stack):
         # Lambda functons & layers
         ##########################
         with tempfile.TemporaryDirectory() as tmpdir:
-            subprocess.check_call(
-                "pip install -r lambdas/notion_layer/requirements.txt -t {}/python".format(  # noqa: E501
-                    tmpdir
-                ).split()
+            cmd = (
+                "pip install"
+                " -r lambdas/notion_layer/requirements.txt"
+                " -t {}/python".format(tmpdir)
+            )
+            subprocess.check_call(  # nosec subprocess_without_shell_equals_true
+                cmd.split()
             )
 
             notion_layer = lambda_.LayerVersion(
@@ -247,7 +250,7 @@ class MwToNotionStack(Stack):
             description="MediaWiki-to-Notion - render and store Notion blocks",
             environment={
                 "NOTION_BLOCKS_TABLE": notion_blocks_table.table_name,
-                "NOTION_DATA_DIR": "/tmp/notion-py",
+                "NOTION_DATA_DIR": "/tmp/notion-py",  # nosec hardcoded_tmp_directory
                 "NOTION_PAGES_TABLE": notion_pages_table.table_name,
                 "POWERTOOLS_METRICS_NAMESPACE": self._metric_namespace,
                 # Service name must match function name: the dashboard infers
@@ -300,7 +303,7 @@ class MwToNotionStack(Stack):
                 "MAX_BLOCKS_PARAM": max_blocks_param.parameter_name,
                 "API_SECRET_NAME": api_secret.secret_name,
                 "NOTION_BLOCKS_TABLE": notion_blocks_table.table_name,
-                "NOTION_DATA_DIR": "/tmp/notion-py",
+                "NOTION_DATA_DIR": "/tmp/notion-py",  # nosec hardcoded_tmp_directory
                 "NOTION_PAGES_TABLE": notion_pages_table.table_name,
                 "POWERTOOLS_METRICS_NAMESPACE": self._metric_namespace,
                 # Service name must match function name: the dashboard infers
