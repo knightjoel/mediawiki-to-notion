@@ -14,3 +14,7 @@ repos:
       rev: 5.0.4
       hooks:
       - id: flake8
+    - repo: https://github.com/pycqa/bandit
+      rev: 1.7.4
+      hooks:
+      - id: bandit
