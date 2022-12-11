@@ -27,7 +27,7 @@
 
 import json
 import os
-import pickle
+import pickle  # nosec import_pickle
 import shutil
 from collections import defaultdict
 from datetime import datetime as dt, timezone
@@ -236,8 +236,9 @@ def record_handler(record: Dict, tmpdir: str) -> bool:
         title = title[:-3]
     new_page = get_or_make_page(record["BlockBatch"], title, parent_page_url)
 
-    # Upload the block to its page.
-    block = pickle.loads(record["BlockContent"].value)
+    # Upload the block to its page. Another function in this app created the
+    # BlockContent value so we consider it trusted.
+    block = pickle.loads(record["BlockContent"].value)  # nosec pickle
     try:
         uploadBlock(block, new_page, None, imagePathFunc=get_image_object)
     except Exception:
@@ -268,7 +269,7 @@ def handler(event: Dict, context: Dict) -> Dict:
     )
 
     # Storage for images, PDFs, etc, which are embedded in the block.
-    tmpdir = "/tmp/" + event["BlockBatch"] + "/"
+    tmpdir = "/tmp/" + event["BlockBatch"] + "/"  # nosec hardcoded_tmp_directory
     try:
         os.mkdir(tmpdir, mode=0o700)
     except FileExistsError:

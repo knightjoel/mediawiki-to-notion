@@ -15,7 +15,7 @@
 
 import json
 import os
-import pickle
+import pickle  # nosec import_pickle
 import shutil
 import uuid
 from collections import defaultdict
@@ -96,7 +96,7 @@ def record_handler(record: SQSRecord) -> None:
             md_filename = unquote_key.rsplit("/", 1)[1]
         else:
             md_filename = unquote_key
-        tmpdir = "/tmp/" + batch_id + "/"
+        tmpdir = "/tmp/" + batch_id + "/"  # nosec hardcoded_tmp_directory
         try:
             os.mkdir(tmpdir, mode=0o700)
         except FileExistsError:
